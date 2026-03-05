@@ -13,11 +13,7 @@ A simple weather application built with **Flutter** that shows current weather i
 - Dart
 - Weather API (e.g. OpenWeatherMap)
 
-## 📸 Screenshots
-(Add screenshots here if you have)
 
-## 📦 Getting Started
 
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/weather-app.git
+
+
