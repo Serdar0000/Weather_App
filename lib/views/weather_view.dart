@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weather_app/presenters/weather_presenter.dart';
 import 'package:weather_app/presenters/auth_presenter.dart';
+import 'package:weather_app/presenters/notification_presenter.dart';
+import 'package:weather_app/services/notification_service.dart';
+import 'package:weather_app/models/notification_payload.dart';
 import 'package:weather_app/theme.dart';
+import 'package:weather_app/views/settings_view.dart';
+import 'package:weather_app/views/notification_details_view.dart';
 
 class WeatherView extends StatefulWidget {
   final VoidCallback onLogout;
@@ -37,6 +42,69 @@ class _WeatherViewState extends State<WeatherView> {
     super.dispose();
   }
 
+  /// Отправить тестовое уведомление
+  Future<void> _sendTestNotification() async {
+    try {
+      final weatherPresenter = context.read<WeatherPresenter>();
+      final currentWeather = weatherPresenter.currentWeather;
+      
+      if (currentWeather == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚠️ Сначала загрузи погоду для города!'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final notificationService = NotificationService();
+      await notificationService.init();
+
+      // Используем реальные данные о погоде с названием города из API
+      final cityName = currentWeather.city ?? weatherPresenter.currentCity;
+      final testPayload = NotificationPayload(
+        id: 'test-${DateTime.now().millisecondsSinceEpoch}',
+        city: cityName,
+        cityRu: cityName,
+        temp: currentWeather.temp.toDouble(),
+        description: currentWeather.type ?? 'Неизвестно',
+        humidity: currentWeather.humidity,
+        windSpeed: currentWeather.windSpeed,
+        pressure: currentWeather.pressure,
+        visibility: currentWeather.visibility,
+        icon: currentWeather.icon,
+      );
+
+      await notificationService.showNotification(
+        title: '🌤️ Тестовое уведомление',
+        body: '$cityName: ${currentWeather.temp}°C, ${currentWeather.type}',
+        payload: testPayload,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✓ Тестовое уведомление отправлено!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +112,24 @@ class _WeatherViewState extends State<WeatherView> {
         title: const Text('Погода',style: TextStyle(color: Colors.white,fontSize: 30)),
         backgroundColor: theme.scaffoldBackgroundColor,
         actions: [
+          // Кнопка отправки тестового уведомления
+          IconButton(
+            icon: const Icon(Icons.notifications_active),
+            tooltip: 'Отправить тестовое уведомление',
+            onPressed: _sendTestNotification,
+          ),
+          // Кнопка настроек
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Настройки',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsView()),
+              );
+            },
+          ),
+          // Кнопка выхода
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {

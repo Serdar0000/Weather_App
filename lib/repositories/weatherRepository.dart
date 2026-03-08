@@ -33,7 +33,13 @@ class WeatherRepository {
         icon: data['weather'][0]['icon'].toString(),
         maxTemp: (data['main']['temp_max'] as num).round(),
         minTemp: (data['main']['temp_min'] as num).round(),
-        type: (data ['weather'][0]['main'])
+        type: data['weather'][0]['main'].toString(),
+        humidity: (data['main']['humidity'] as num?)?.toDouble() ?? 0,
+        windSpeed: (data['wind']['speed'] as num?)?.toDouble() ?? 0,
+        pressure: (data['main']['pressure'] as num?)?.toInt() ?? 0,
+        visibility: (data['visibility'] as num?)?.toInt() ?? 0,
+        city: data['name'].toString(),
+        country: data['sys']['country'].toString(),
       );
     } on DioException catch (e) {
       print("Error: ${e.message}");
@@ -55,6 +61,8 @@ class WeatherRepository {
 
       final data = response.data as Map<String, dynamic>;
       final List days = data["list"];
+      final cityName = data["city"]["name"].toString();
+      final countryName = data["city"]["country"].toString();
       
       List<Weather> res = []; // Создаем пустой список для результата
       String last_weekday = '';
@@ -76,6 +84,12 @@ class WeatherRepository {
           icon: value['weather'][0]['icon'].toString(),
           weekday: weekday,
           type: value['weather'][0]['main'].toString(),
+          humidity: (value['main']['humidity'] as num?)?.toDouble() ?? 0,
+          windSpeed: (value['wind']['speed'] as num?)?.toDouble() ?? 0,
+          pressure: (value['main']['pressure'] as num?)?.toInt() ?? 0,
+          visibility: (value['visibility'] as num?)?.toInt() ?? 0,
+          city: cityName,
+          country: countryName,
         );
 
         res.add(weather);
